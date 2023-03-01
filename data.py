@@ -6,7 +6,8 @@ from client_api import youtube
 
 
 class Channel:
-    def __init__(self, channel_id='UCMCgOm8GZkHp8zJ6l7_hIuA', title=None, description=None, url=None, subscriber_count=None, video_count=None,
+    def __init__(self, channel_id='UCMCgOm8GZkHp8zJ6l7_hIuA', title=None, description=None, url=None,
+                 subscriber_count=None, video_count=None,
                  view_count=None):
         self.__channel_id = channel_id
         self.title = title
