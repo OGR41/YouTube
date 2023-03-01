@@ -1,11 +1,14 @@
 import json
 from client_api import youtube
 
+# channel_id = 'UCMCgOm8GZkHp8zJ6l7_hIuA'  # вДудь
+# channel_id = 'UC1eFXmJNkjITxPFWTy6RsWg'    # Редакция
+
 
 class Channel:
-    def __init__(self, title=None, description=None, url=None, subscriber_count=None, video_count=None,
+    def __init__(self, channel_id='UCMCgOm8GZkHp8zJ6l7_hIuA', title=None, description=None, url=None, subscriber_count=None, video_count=None,
                  view_count=None):
-        self.__channel_id = 'UCMCgOm8GZkHp8zJ6l7_hIuA'
+        self.__channel_id = channel_id
         self.title = title
         self.description = description
         self.url = url
@@ -50,16 +53,30 @@ class Channel:
     def get_service():
         return youtube
 
+    def __repr__(self):
+        return f'{self.__class__.__name__}("{self.title}")'
 
-vdud = Channel()
+    def __str__(self):
+        return f'Youtube-канал: {self.title}'
 
-vdud.get_data()
-print(vdud.title)
-print(vdud.video_count)
-print(vdud.url)
+    def __add__(self, other):
+        return int(self.subscriber_count) + int(other.subscriber_count)
 
-# vdud.channel_id = 'UC1eFXmJNkjITxPFWTy6RsWg'
+    def __lt__(self, other):
+        if not isinstance(other, (int, Channel)):
+            raise TypeError('Неверный тип для сравнения')
 
-print(vdud.get_service())
+        s_c = other if isinstance(other, int) else other.subscriber_count
+        return self.subscriber_count > s_c
 
-vdud.set_json()
+
+ch1 = Channel()
+ch1.get_data()
+print(ch1)
+ch2 = Channel('UC1eFXmJNkjITxPFWTy6RsWg')
+ch2.get_data()
+print(ch2)
+
+ch1 > ch2
+ch1 < ch2
+ch1 + ch2
