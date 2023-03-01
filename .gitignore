@@ -1,0 +1,5 @@
+# Created by pytest automatically.
+*
+.idea/
+venv/
+/.idea/encodings.xml
