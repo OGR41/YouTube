@@ -71,13 +71,44 @@ class Channel:
         return self.subscriber_count > s_c
 
 
-ch1 = Channel()
-ch1.get_data()
-print(ch1)
-ch2 = Channel('UC1eFXmJNkjITxPFWTy6RsWg')
-ch2.get_data()
-print(ch2)
+class Video:
+    def __init__(self, video_id):
+        self.video_id = video_id
+        # youtube = Channel.get_service()
+        self.video_info = youtube.videos().list(id=self.video_id, part='snippet,statistics').execute()
+        self.video_name = self.video_info['items'][0]['snippet']['title']
+        self.video_view_count = int(self.video_info['items'][0]['statistics']['viewCount'])
+        self.video_like_count = int(self.video_info['items'][0]['statistics']['likeCount'])
 
-ch1 > ch2
-ch1 < ch2
-ch1 + ch2
+    def __repr__(self):
+        return f'{self.__class__.__name__}("{self.video_id}")'
+
+    def __str__(self):
+        return f'{self.video_name}'
+
+    def print_info(self):
+        print(json.dumps(self.video_info, indent=2, ensure_ascii=False))
+
+    @property
+    def _video_id(self):
+        return self.video_id
+
+
+class PLVideo(Video):
+    def __init__(self, video_id, playlist_id):
+        super().__init__(video_id)
+        self.playlist_id = playlist_id
+        self.playlist_info = youtube.playlists().list(id=self.playlist_id, part='snippet').execute()
+        self.playlist_name = self.playlist_info['items'][0]['snippet']['title']
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}("{self.video_id}", "{self.playlist_id}")'
+
+    def __str__(self):
+        return f'{super().__str__()} ("{self.playlist_name}")'
+
+
+video1 = Video('9lO06Zxhu88')
+video2 = PLVideo('BBotskuyw_M', 'PL7Ntiz7eTKwrqmApjln9u4ItzhDLRtPuD')
+print(video1)
+print(video2)
