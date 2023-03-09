@@ -1,5 +1,7 @@
 import json
 from client_api import youtube
+import isodate
+from pprint import pprint
 
 # channel_id = 'UCMCgOm8GZkHp8zJ6l7_hIuA'  # вДудь
 # channel_id = 'UC1eFXmJNkjITxPFWTy6RsWg'    # Редакция
@@ -66,7 +68,6 @@ class Channel:
     def __lt__(self, other):
         if not isinstance(other, (int, Channel)):
             raise TypeError('Неверный тип для сравнения')
-
         s_c = other if isinstance(other, int) else other.subscriber_count
         return self.subscriber_count > s_c
 
@@ -74,7 +75,6 @@ class Channel:
 class Video:
     def __init__(self, video_id):
         self.video_id = video_id
-        # youtube = Channel.get_service()
         self.video_info = youtube.videos().list(id=self.video_id, part='snippet,statistics').execute()
         self.video_name = self.video_info['items'][0]['snippet']['title']
         self.video_view_count = int(self.video_info['items'][0]['statistics']['viewCount'])
@@ -108,7 +108,39 @@ class PLVideo(Video):
         return f'{super().__str__()} ("{self.playlist_name}")'
 
 
-video1 = Video('9lO06Zxhu88')
-video2 = PLVideo('BBotskuyw_M', 'PL7Ntiz7eTKwrqmApjln9u4ItzhDLRtPuD')
-print(video1)
-print(video2)
+class PlayList:
+    def __init__(self, playlist_id):
+        self.playlist_id = playlist_id
+        self.playlist_info = youtube.playlists().list(id=self.playlist_id, part='snippet,player').execute()
+        self.title = self.playlist_info['items'][0]['snippet']['title']
+        self.url = self.playlist_info['items'][0]['snippet']['thumbnails']['standard']['url']
+
+    @property
+    def total_duration(self):
+        playlist_videos = youtube.playlistItems().list(playlistId=self.playlist_id, part='contentDetails',
+                                                       maxResults=50).execute()
+        video_ids: list[str] = [video['contentDetails']['videoId'] for video in playlist_videos['items']]
+        self.video_response = youtube.videos().list(part='contentDetails,statistics,snippet,player', id=','.join(video_ids)).\
+            execute()
+        for video in self.video_response['items']:
+            iso_8601_duration = video['contentDetails']['duration']
+            duration = isodate.parse_duration(iso_8601_duration)
+            return duration
+
+    def show_best_video(self):
+        like_count = 0
+        best_video = ''
+        for i in self.video_response['items']:
+            if int(i['statistics']['likeCount']) > like_count:
+                best_video = i['snippet']['thumbnails']['standard']['url']
+        return best_video
+
+
+pl = PlayList('PLguYHBi01DWr4bRWc4uaguASmo7lW4GCb')
+pl.title
+pl.url
+duration = pl.total_duration
+print(duration)
+print(type(duration))
+print(duration.total_seconds())
+pl.show_best_video()
