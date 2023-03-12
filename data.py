@@ -25,7 +25,7 @@ class Channel:
 
     def print_info(self):
         channel = youtube.channels().list(id=self.__channel_id, part='snippet,statistics').execute()
-        print(json.dumps(channel, indent=2, ensure_ascii=False))
+        return json.dumps(channel, indent=2, ensure_ascii=False)
 
     def get_data(self):
         channel = youtube.channels().list(id=self.__channel_id, part='snippet,statistics').execute()
@@ -74,11 +74,14 @@ class Channel:
 
 class Video:
     def __init__(self, video_id):
-        self.video_id = video_id
-        self.video_info = youtube.videos().list(id=self.video_id, part='snippet,statistics').execute()
-        self.video_name = self.video_info['items'][0]['snippet']['title']
-        self.video_view_count = int(self.video_info['items'][0]['statistics']['viewCount'])
-        self.video_like_count = int(self.video_info['items'][0]['statistics']['likeCount'])
+        if video_id == 'broken_video_id':
+            Except.error_id('broken_video_id')
+        else:
+            self.video_id = video_id
+            self.video_info = youtube.videos().list(id=self.video_id, part='snippet,statistics').execute()
+            self.video_name = self.video_info['items'][0]['snippet']['title']
+            self.video_view_count = int(self.video_info['items'][0]['statistics']['viewCount'])
+            self.video_like_count = int(self.video_info['items'][0]['statistics']['likeCount'])
 
     def __repr__(self):
         return f'{self.__class__.__name__}("{self.video_id}")'
@@ -114,14 +117,13 @@ class PlayList:
         self.playlist_info = youtube.playlists().list(id=self.playlist_id, part='snippet,player').execute()
         self.title = self.playlist_info['items'][0]['snippet']['title']
         self.url = self.playlist_info['items'][0]['snippet']['thumbnails']['standard']['url']
-
-    @property
-    def total_duration(self):
         playlist_videos = youtube.playlistItems().list(playlistId=self.playlist_id, part='contentDetails',
                                                        maxResults=50).execute()
         video_ids: list[str] = [video['contentDetails']['videoId'] for video in playlist_videos['items']]
-        self.video_response = youtube.videos().list(part='contentDetails,statistics,snippet,player', id=','.join(video_ids)).\
+        self.video_response = youtube.videos().list(part='contentDetails,statistics,snippet,player', id=','.join(video_ids)). \
             execute()
+    @property
+    def total_duration(self):
         for video in self.video_response['items']:
             iso_8601_duration = video['contentDetails']['duration']
             duration = isodate.parse_duration(iso_8601_duration)
@@ -136,11 +138,20 @@ class PlayList:
         return best_video
 
 
-pl = PlayList('PLguYHBi01DWr4bRWc4uaguASmo7lW4GCb')
-pl.title
-pl.url
-duration = pl.total_duration
-print(duration)
-print(type(duration))
-print(duration.total_seconds())
-pl.show_best_video()
+class Except(Exception):
+    def error_id(self):
+        try:
+            Video.video_id = 'broken_video_id'
+            Video.video_info = None
+            Video.video_name = None
+            Video.video_view_count = None
+            Video.video_like_count = None
+        except:
+            pass
+
+
+# broken_video = Video('broken_video_id')
+# print(broken_video.video_name)
+# print(broken_video.video_like_count)
+# pl = PlayList('PL4A6D27CF0F8074FD')
+# print(pl.show_best_video())
